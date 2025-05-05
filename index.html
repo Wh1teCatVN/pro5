@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>N1ghtClaw - Pro CS2 Player</title>
+    <!-- Liên kết tới Google Fonts và Font Awesome -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <style>
+      /* Reset cơ bản */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Quicksand', sans-serif;
+        background-color: #101c2e;
+        color: #e0f7ff;
+        overflow-x: hidden;
+      }
+
+      /* Container chính */
+      .container {
+        display: flex;
+        padding: 30px;
+        align-items: flex-start; /* Cho phép các phần tử con có chiều cao tự nhiên */
+        opacity: 0;
+        transition: opacity 1.5s ease;
+      }
+
+      /* Background Video */
+      #bg-video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+      }
+
+      /* Canvas cho hiệu ứng tuyết */
+      #snow {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      /* Hiệu ứng Sakura */
+      #sakura-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+      }
+      .sakura {
+        position: absolute;
+        width: 20px;
+        height: auto;
+        opacity: 0.8;
+        animation: sakuraFall 4s linear infinite;
+      }
+      @keyframes sakuraFall {
+        0% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        100% {
+          transform: translateY(100vh) rotate(360deg);
+        }
+      }
+
+      /* Sidebar (Cột bên trái) */
+      .sidebar {
+        width: 25%;
+        padding: 20px;
+        background-color: rgba(10, 20, 30, 0.8);
+        border-radius: 10px;
+      }
+      /* Banner chứa ảnh bìa và avatar (cột bên trái) */
+      .banner {
+        position: relative;
+        height: 150px;
+        border-radius: 10px;
+      }
+      .banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 10px;
+      }
+      /* Avatar đè lên banner, dịch sang bên trái một chút */
+      .avatar {
+        position: absolute;
+        bottom: -40px;
+        left: 35%;
+        transform: translateX(-50%);
+        text-align: center;
+      }
+      .avatar img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        /* Hiển thị dạng hình vuông: không sử dụng border-radius */
+        border: 4px solid #00ccff;
+        background: #0b1e2e;
+      }
+      /* Thông tin cá nhân (cột bên trái) */
+      .info {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        margin-top: 50px;
+        font-size: 0.95rem;
+      }
+      .info h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.2rem;
+        color: #FFFFFF;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
+      .info p {
+        font-size: 1rem;
+        color: #ddd;
+        margin: 5px 0;
+      }
+      /* Phần Social và My Profiles */
+      .profile-links {
+        margin-top: 20px;
+      }
+      .social-icons {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .social-icons a {
+        font-size: 1.5rem;
+        margin: 0 10px;
+      }
+      /* Sắp xếp theo thứ tự: YouTube, Instagram, Twitter, Facebook */
+      .social-icons a.youtube {
+        color: #FF0000;
+      }
+      .social-icons a.instagram {
+        color: #E1306C;
+      }
+      .social-icons a.twitter {
+        color: #1DA1F2;
+      }
+      .social-icons a.facebook {
+        color: #4267B2;
+      }
+      .personal-links {
+        text-align: center;
+      }
+      .personal-links h3 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+      }
+      .personal-links ul {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        list-style: none;
+        gap: 10px;
+        padding: 0;
+      }
+      .personal-links a {
+        color: #90dfff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        font-size: 1rem;
+      }
+      .personal-links a i {
+        margin-right: 5px;
+        font-size: 1.2rem;
+      }
+      /* About Me: Đặt xuống dưới mục Social */
+      .about {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 10px;
+        text-align: left;
+      }
+      .about h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.8rem;
+        color: #ffffff;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .about p {
+        font-size: 0.9rem;
+        color: #d0eaff;
+        line-height: 1.5;
+      }
+      /* Phần Nội dung chính (Cột bên phải) - Thiết kế card hiện đại */
+      main {
+        width: 75%;
+        padding: 20px;
+      }
+      main section {
+        background: rgba(255, 255, 255, 0.05); /* nền tối mờ tạo hiệu ứng glassmorphism */
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      main section:hover {
+        transform: scale(1.02);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      }
+      main section h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.4rem;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin-bottom: 20px;
+        color: #FFFFFF;
+        text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.8);
+      }
+      main section p {
+        font-size: 1rem;
+        line-height: 1.8;
+        color: #d0eaff;
+        margin-bottom: 15px;
+      }
+      
+      /* Cập nhật phần Gaming Gear: to hơn, trải đều và dễ nhìn hơn */
+      #gear {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+      #gear .gear-item {
+        flex: 1 1 calc(50% - 20px); /* Hiển thị 2 mục mỗi hàng */
+        max-width: 300px;
+        text-align: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+      }
+      #gear .gear-item:hover {
+        transform: scale(1.05);
+      }
+      #gear .gear-item img {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        object-fit: cover;
+      }
+      #gear .gear-item p {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+      }
+      
+      /* Mục PC Specs & Config: nhỏ gọn hơn */
+      .pc-container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .pc-spec {
+        flex: 1;
+        font-size: 0.9rem;
+      }
+      .pc-spec ul {
+        list-style: none;
+        padding-left: 10px;
+      }
+      .pc-spec li {
+        margin-bottom: 5px;
+      }
+      .pc-config {
+        flex-basis: 300px;
+        text-align: center;
+      }
+      .pc-config h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.8rem;
+        color: #ffffff;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .download-btn {
+        background: linear-gradient(45deg, #00ccff, #0066cc);
+        color: #ffffff;
+        font-size: 1.1rem;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.3s ease;
+        margin-top: 10px;
+      }
+      .download-btn:hover {
+        background: linear-gradient(45deg, #0077ff, #005bb5);
+        transform: translateY(-3px);
+      }
+      
+      /* Phần Rank theo trình bày ngang */
+      #ranks {
+        margin-top: 20px;
+      }
+      #ranks .rank-list {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      #ranks .rank-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 10px;
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+      }
+      #ranks .rank-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+      }
+      #ranks .rank-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      #ranks .rank-title {
+        font-size: 1rem;
+        font-weight: bold;
+        margin: 5px 0;
+      }
+      #ranks .rank-platform {
+        font-size: 0.85rem;
+        color: #90dfff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Welcome Screen -->
+    <div id="loading-screen">
+      <span>Welcome to N1ghtClaw 白猫 profile</span>
+    </div>
+
+    <!-- Background Video -->
+    <video autoplay muted loop id="bg-video">
+      <source src="background.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Canvas cho hiệu ứng tuyết -->
+    <canvas id="snow"></canvas>
+
+    <!-- Hiệu ứng Sakura -->
+    <div id="sakura-container"></div>
+
+    <!-- Container chính -->
+    <div class="container">
+      <!-- Sidebar (Bên trái) -->
+      <aside class="sidebar">
+        <!-- Banner chứa ảnh bìa và avatar -->
+        <div class="banner">
+          <img src="https://imgur.com/tKeyRjU.png" alt="Banner" />
+          <div class="avatar">
+            <img src="https://imgur.com/Au1h1Y0.png" alt="Avatar" />
+          </div>
+        </div>
+        <!-- Thông tin cá nhân -->
+        <div class="info">
+          <h2>N1ghtClaw 白猫</h2>
+          <p>Nationality: Vietnam</p>
+          <p>Real Name: [Your Name]</p>
+        </div>
+        <!-- Social và My Profiles -->
+        <div class="profile-links">
+          <div class="social-icons">
+            <a class="youtube" href="https://www.youtube.com/@N1ghtClaw" target="_blank">
+              <i class="fab fa-youtube-square"></i>
+            </a>
+            <a class="instagram" href="https://www.youtube.com/@N1ghtClaw" target="_blank">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a class="twitter" href="https://x.com/N1ghtClaw" target="_blank">
+              <i class="fab fa-twitter-square"></i>
+            </a>
+            <a class="facebook" href="https://www.facebook.com/N1ghtClaw" target="_blank">
+              <i class="fab fa-facebook-square"></i>
+            </a>
+          </div>
+          <div class="personal-links">
+            <h3>🌐 My Profiles</h3>
+            <ul>
+              <li><a href="#"><i class="fab fa-steam"></i> Steam</a></li>
+              <li><a href="#"><i class="fas fa-gamepad"></i> Faceit</a></li>
+              <li><a href="#"><i class="fas fa-play"></i> 5EPlay</a></li>
+              <li><a href="#"><i class="fab fa-twitch"></i> Twitch</a></li>
+            </ul>
+          </div>
+        </div>
+        <!-- About Me: đặt xuống dưới mục Social -->
+        <div class="about">
+          <h2>About Me</h2>
+          <p>
+            I’m a professional CS2 player known as N1ghtClaw. Passionate about FPS and competing in global tournaments.
+          </p>
+        </div>
+      </aside>
+
+      <!-- Nội dung chính (Bên phải) -->
+      <main>
+        <!-- Gaming Gear Section -->
+        <section id="gear">
+          <h2>🎮 Gaming Gear</h2>
+          <div class="gear-item">
+            <img src="https://imgur.com/rcabcjr.png" alt="Mchose A5 Mouse" />
+            <p>
+              <a href="https://www.mchose.store/products/mchose-a5-series-wireless-mouse" target="_blank">
+                Mchose A5
+              </a>
+            </p>
+          </div>
+          <div class="gear-item">
+            <img src="https://imgur.com/sSWL6PW.png" alt="Madlion MAD 60HE Keyboard" />
+            <p>
+              <a href="https://f.gg/products/madlions-mad60-he-hall-effect-keyboard" target="_blank">
+                Madlion MAD 60HE
+              </a>
+            </p>
+          </div>
+          <div class="gear-item">
+            <img src="https://imgur.com/VdkStnD.png" alt="Space Pad Mousepad" />
+            <p>
+              <a
+                href="https://shopee.vn/-S%E1%BA%B4N-GIAO-Pad-chu%E1%BB%99t-gaming-SpacePad-phi%C3%AAn-b%E1%BA%A3n-c%E1%BA%A5p-%C4%91%E1%BA%BF-Poron-SCR-L%C3%B3t-chu%E1%BB%99t-Spacepad-ch%C6%A1i-game-(H%C3%A0ng-ch%C3%ADnh-h%C3%A3ng)-i.113486214.22664543365?sp_atk=7f0dd9e2-5051-447f-bc3e-463041cf6cf5&xptdk=7f0dd9e2-5051-447f-bc3e-463041cf6cf5"
+                target="_blank"
+              >
+                Space Pad
+              </a>
+            </p>
+          </div>
+          <div class="gear-item">
+            <img src="https://imgur.com/WrTmlDH.png" alt="Razer Kraken V3 X USB Headset" />
+            <p>
+              <a href="https://gearvn.com/products/tai-nghe-razer-kraken-v3-x-usb" target="_blank">
+                Razer Kraken V3 X USB
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <!-- PC Specs & Config Section -->
+        <section id="pc">
+          <div class="pc-container">
+            <div class="pc-spec">
+              <h2>🖥️ PC Specs</h2>
+              <ul>
+                <li><strong>CPU:</strong> Intel i5-10400F</li>
+                <li><strong>GPU:</strong> GTX 1650</li>
+                <li><strong>RAM:</strong> 16GB DDR4</li>
+                <li><strong>SSD:</strong> 500GB SSD</li>
+              </ul>
+            </div>
+            <div class="pc-config">
+              <h2>🛠️ CS2 Config</h2>
+              <button class="download-btn" href="window.location.href='https://drive.google.com/drive/folders/1YRzJaoLNlgskfsSiJNn-TWyYmTJ_8goW?usp=sharing'">
+                Download Config
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Ranks Section -->
+        <section id="ranks">
+          <h2>🏆 Game Ranks</h2>
+          <div class="rank-list">
+            <div class="rank-item">
+              <div class="rank-icon">
+                <img src="ranks/valorant-cn.png" alt="Radiant" />
+              </div>
+              <div class="rank-info">
+                <p class="rank-title">Radiant</p>
+                <p class="rank-platform">Valorant (China)</p>
+              </div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-icon">
+                <img src="ranks/valorant-apac.png" alt="Gold 3" />
+              </div>
+              <div class="rank-info">
+                <p class="rank-title">Gold 3</p>
+                <p class="rank-platform">Valorant (APAC)</p>
+              </div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-icon">
+                <img src="ranks/faceit.png" alt="10" />
+              </div>
+              <div class="rank-info">
+                <p class="rank-title">10</p>
+                <p class="rank-platform">FaceIt</p>
+              </div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-icon">
+                <img src="ranks/csgo.png" alt="Global Elite" />
+              </div>
+              <div class="rank-info">
+                <p class="rank-title">Global Elite</p>
+                <p class="rank-platform">CS:GO</p>
+              </div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-icon">
+                <img src="ranks/csgo2.png" alt="21.000" />
+              </div>
+              <div class="rank-info">
+                <p class="rank-title">21.000</p>
+                <p class="rank-platform">CS:GO 2</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // Hiệu ứng Welcome - đơn giản fade in chữ, sau đó fade out và chuyển sang nội dung chính
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          const loader = document.getElementById("loading-screen");
+          loader.classList.add("animate-exit");
+          setTimeout(() => {
+            loader.style.display = "none";
+            document.querySelector(".container").style.opacity = "1";
+          }, 1000);
+        }, 3000);
+      });
+
+      /* Hiệu ứng Tuyết (Snowfall) */
+      const canvas = document.getElementById("snow");
+      const ctx = canvas.getContext("2d");
+      let w = (canvas.width = window.innerWidth);
+      let h = (canvas.height = window.innerHeight);
+      let snowflakes = [];
+
+      function createSnowflakes() {
+        for (let i = 0; i < 100; i++) {
+          snowflakes.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: Math.random() * 4 + 1,
+            d: Math.random() * 100,
+          });
+        }
+      }
+      function drawSnowflakes() {
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        for (let i = 0; i < 100; i++) {
+          let f = snowflakes[i];
+          ctx.moveTo(f.x, f.y);
+          ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
+        }
+        ctx.fill();
+        moveSnowflakes();
+      }
+      let angle = 0;
+      function moveSnowflakes() {
+        angle += 0.01;
+        for (let i = 0; i < 100; i++) {
+          let f = snowflakes[i];
+          f.y += Math.cos(angle + f.d) + 1 + f.r / 2;
+          f.x += Math.sin(angle) * 2;
+          if (f.y > h) {
+            f.y = 0;
+            f.x = Math.random() * w;
+          }
+        }
+      }
+      function updateSnow() {
+        drawSnowflakes();
+        requestAnimationFrame(updateSnow);
+      }
+
+      createSnowflakes();
+      updateSnow();
+
+      /* Hiệu ứng Sakura sử dụng hình ảnh từ URL */
+      const sakuraContainer = document.getElementById("sakura-container");
+      function createSakura() {
+        const sakura = document.createElement("img");
+        sakura.src = "https://imgur.com/y5cEeTr.png";
+        sakura.className = "sakura";
+        sakura.style.left = Math.random() * window.innerWidth + "px";
+        sakura.style.animationDuration = (3 + Math.random() * 5) + "s";
+        sakuraContainer.appendChild(sakura);
+        setTimeout(() => {
+          sakura.remove();
+        }, 8000);
+      }
+      setInterval(createSakura, 500);
+    </script>
+  </body>
+</html>
